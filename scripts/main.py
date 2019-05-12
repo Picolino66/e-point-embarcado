@@ -1,22 +1,20 @@
-#import hello_world
+#Esse arquivo é executado automaticamente logo em seguida do boot.py
+
+import cadastrar
+import autenticar
 #import web_server
-import network
-import rfid
+#import network
+#import rfid
 #import connectWifi
+
+autenticar.aut()
 
 #connectWifi.do_connect()
 
-# Hello World!
-#hello_world.purple_rain()
-
-# AP configuration
+# Ativa o ESP no modo Access Point
 #ap_if = network.WLAN(network.AP_IF)
 #ap_if.active(True)
 #ap_if.config(essid='ESP-AP')
 
-# Init web server
+# Inicia o web server
 #web_server.host_server()
-
-
-# RFID
-rfid.Mfrc522()

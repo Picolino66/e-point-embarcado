@@ -1,3 +1,5 @@
+#Modulo pronto do RFID MFRC522
+
 from machine import Pin, SPI
 from os import uname
 
