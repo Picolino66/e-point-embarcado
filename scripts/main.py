@@ -2,14 +2,14 @@
 
 import cadastrar
 import autenticar
-#import web_server
-#import network
-#import rfid
-#import connectWifi
+import web_server
+import network
+import connectWifi
 
-autenticar.aut()
+connectWifi.do_connect()
 
-#connectWifi.do_connect()
+while True:
+    autenticar.autenticado()
 
 # Ativa o ESP no modo Access Point
 #ap_if = network.WLAN(network.AP_IF)
