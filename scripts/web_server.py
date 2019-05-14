@@ -9,14 +9,14 @@ def host_server(event=None, callback=None):
     def index(req, resp):
         yield from picoweb.start_response(resp)
         yield from resp.awrite("Pagina que solicitara ao membro para que se aproxime o cartao")
-        yield from app.render_template(resp, "info.tpl", (req,))
+        #yield from app.render_template(resp, "info.tpl", (req,))
 
 
     @app.route("/")
     def index(req, resp):
         yield from picoweb.start_response(resp)
         yield from resp.awrite("Pagina em que se fara a seleçao dos membros cadastrados")
-        yield from app.render_template(resp, "index.tpl", (req,))
+        #yield from app.render_template(resp, "index.tpl", (req,))
 
     import logging as logging
     logging.basicConfig(level=logging.INFO)
