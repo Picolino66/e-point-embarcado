@@ -1,20 +1,22 @@
 #Esse arquivo é executado automaticamente logo em seguida do boot.py
 
 import cadastrar
-import autenticar
-import web_server
 import network
+import connectWifi
+import web_server
 import connectWifi
 
 connectWifi.do_connect()
 
-while True:
-    autenticar.autenticado()
+import bancoAut
 
-# Ativa o ESP no modo Access Point
+# AP configuration
 #ap_if = network.WLAN(network.AP_IF)
-#ap_if.active(True)
 #ap_if.config(essid='ESP-AP')
+#ap_if.active(True)
 
-# Inicia o web server
 #web_server.host_server()
+
+
+
+

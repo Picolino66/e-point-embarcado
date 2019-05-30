@@ -2,10 +2,10 @@ import mfrc522   #importa a lib do RFID
 
 #Define-se os pinos
 RF_SCK = 18  # clock
-RF_SDA = 21  # data
+RF_SDA = 13  # data
 RF_MOSI = 23  # master-out slave-in
 RF_MISO = 19  # master-in slave-out
-RF_RST = 22  # reset
+RF_RST = 26  # reset
 
 class Mfrc522():
     #Funçao que inicia o RFID com os respectivos pinos
@@ -21,6 +21,7 @@ class Mfrc522():
                 (stat, raw_uid) = self.rdr.anticoll()
                 try:
                     read = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3]) 
+                    print(read)
                     return read   #retorna o read para ser acessado por outros scripts
                 except IndexError:
                     pass

@@ -3,7 +3,6 @@ import ujson
 import rfid
 
 def cadastrar():
-
     try:                               #tenta abrir um arquivo "mydb", se nao encontrar, cria-se um.
         f = open("mydb", "r+b")
     except OSError:
