@@ -3,10 +3,10 @@ import ujson
 import rfid
 
 def cadastrar():
-    try:                               #tenta abrir um arquivo "mydb", se nao encontrar, cria-se um.
-        f = open("mydb", "r+b")
+    try:                               #tenta abrir um arquivo "member_table", se nao encontrar, cria-se um.
+        f = open("member_table", "r+b")
     except OSError:
-        f = open("mydb", "w+b")
+        f = open("member_table", "w+b")
 
     db = btree.open(f)
 

@@ -1,0 +1,29 @@
+.button {
+  background-color: #5e2075;
+  border: none;
+  color: white;
+  padding: 0 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.entrada {
+  background-color: #5e2075;
+  color: white;
+  border:none;
+  border-radius: 5px;
+  padding: 0 3px;
+  margin: 5px;
+  font-size: 16px;
+}
+.bloco {
+  padding: 50% 0;
+}
+::placeholder {
+  color: white;
+  opacity: 0.85;
+}

@@ -3,9 +3,13 @@
 import DS3231
 from machine import I2C, Pin
 
-sda_pin = 21
-scl_pin = 22
+class Rtc():
+    def __init__(self):
+        self.sda_pin = 21
+        self.scl_pin = 22
+    
+    def get_rtc(self):
+        i2c = I2C(sda = Pin(self.sda_pin), scl = Pin(self.scl_pin))
+        ds = DS3231.DS3231(i2c)
 
-i2c = I2C(sda = Pin(sda_pin), scl = Pin(scl_pin))
-
-ds = DS3231.DS3231(i2c)  #Variavel utilizada para acessar a data ou a hora.
+        

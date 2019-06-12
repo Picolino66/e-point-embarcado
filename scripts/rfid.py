@@ -11,18 +11,16 @@ class Mfrc522():
     #Funçao que inicia o RFID com os respectivos pinos
     def __init__(self):
         self.rdr = mfrc522.MFRC522(RF_SCK, RF_MOSI, RF_MISO, RF_RST, RF_SDA)
-        self.read()
         
     #Funçao responsavel pela leitura do cartao   
     def read(self):
-        while True:
-            (stat, tag_type) = self.rdr.request(self.rdr.REQIDL)
-            if stat == self.rdr.OK:
-                (stat, raw_uid) = self.rdr.anticoll()
-                try:
-                    read = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3]) 
-                    print(read)
-                    return read   #retorna o read para ser acessado por outros scripts
-                except IndexError:
-                    pass
+        (stat, tag_type) = self.rdr.request(self.rdr.REQIDL)
+        if stat == self.rdr.OK:
+            (stat, raw_uid) = self.rdr.anticoll()
+            try:
+                read = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3]) 
+                print(read)
+            except IndexError:
+                return False
+            return read
         

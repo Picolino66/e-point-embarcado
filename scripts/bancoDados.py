@@ -1,18 +1,10 @@
 #Arquivo que controla os Bancos de Dados
-
 import gc
 import machine
 #import rtc
-
 import btree
-gc.collect()
-
 import ujson
-gc.collect()
-
 import utime
-gc.collect()
-
 import time
 
 class Banco():
@@ -29,9 +21,8 @@ class Banco():
                 f = open(self.filename, "w+b")
                 db = btree.open(f,pagesize = 512)
             else:
-                print("db n iniciou")
+                print("DB nao iniciou")
                 machine.reset()
-                return False
         return f, db
 
     def close(self, f, db):
@@ -42,7 +33,7 @@ class Banco():
     def list(self):
         f, db = self.open()
         for key in db:
-            print(key + " - " + db[key])
+            print(key,"-",db[key])
         self.close(f, db)
 
     def add_json(self,json):
@@ -53,7 +44,6 @@ class Banco():
                 cont = cont+1
             proximo = str(cont)
             db[proximo] = ujson.dumps(json)
-
         except OSError:
             machine.reset()
         self.close(f, db)
@@ -62,11 +52,10 @@ class Log(Banco):
     def __init__(self):
         super(Log,self).__init__('log_table')
 
-    def new_member(self, id, entrou = 0, date=[],time=[], presente=0, enviado=0):
+    def new_log(self, id, entrou = 0,dateTime = [], presente=0, enviado=0):
         json = {
             "id":id,
-            "date":date,
-            "time": time, 
+            "dateTime": dateTime,
             "entrou":entrou, 
             "presente": presente,
             "enviado": enviado
@@ -85,4 +74,23 @@ class Log(Banco):
             return entrou
         except OSError:
             machine.reset()
+
+class Cadastro(Banco):
+    def __init__(self):
+        super(Cadastro,self).__init__('member_table')
+
+    def new_member(self, id, matricula):
+        f, db = self.open()
+        matricula = str(matricula)
+        db[matricula] = id
+        self.close(f, db)
+
+
+    def del_member(self, matricula):
+        f, db = self.open()        
+        matricula = str(matricula).encode()
+        print(matricula," deletado")
+        del db[matricula]
+        self.close(f, db)
+        
 

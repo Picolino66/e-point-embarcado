@@ -6,53 +6,75 @@ import btree
 import rfid
 import time
 import bancoDados
-import rtc
+#import rtc
 
-f = open("mydb", "r+b")
-db = btree.open(f)
+class Log_Aut():
 
-blue = Pin(17,Pin.OUT)
-red = Pin(16,Pin.OUT)
-green = Pin(4,Pin.OUT)
+    def __init__(self):
+        self.logTable = bancoDados.Log()
 
-date_now = rtc.ds.Date()
-time_now = rtc.ds.Time()
-present = 0     # presente = 0 -> Faltou, presente = 1 -> Chegou na hora, presente = 2 -> Chegou atrasado
+        self.timeRG = [19,10,59]
+        self.timeRG_max = [19,20,59]
 
-timeRG = [19,30,00]
+        self.date_now = [2019,6,4] #rtc.ds.Date()
+        self.time_now = [19,0,0] #rtc.ds.Time()
 
-logTable = bancoDados.Log()
+        self.present = 0
+        self.entrou = 0
 
-while True:
-    time.sleep(1)
-    blue.on()
-    print("aguardando o cartao..")
-    id = rfid.Mfrc522().read()   
-    control = 0
-    for key in db:
-        if id == db[key].decode():
-            blue.off()
-            green.on()
-            time.sleep(0.5)
-            green.off()
-            print(id)
-            if logTable.status_entrou(id) == 0:
-                status = 1
-                if time_now >= timeRG:
-                    present = 0
-                else:
-                    present = 1  
-            elif logTable.status_entrou(id) == 1:
-                status = 0
-                present = None
-            logTable.new_member(id,status,date_now,time_now,present)
-            logTable.list()
-            control=1
-            break
+        self.blue = Pin(17,Pin.OUT)
+        self.red = Pin(16,Pin.OUT)
+        self.green = Pin(4,Pin.OUT)
 
-    if control == 0:
-        print("Cartao nao cadastrado")
-        blue.off()
-        red.on()
-        time.sleep(0.5)
-        red.off()
+        self.read_card = rfid.Mfrc522()
+        self.f, self.db = self.open()
+
+
+    def open(self):
+        try:
+            f = open("member_table", "r+b")
+            db = btree.open(f, pagesize = 512)
+        except:
+            print("nao achou a tabela")
+        return f, db
+
+    def banco_log(self):
+        while True:
+            time.sleep(1)
+            self.green.off()
+            self.red.on()
+            self.blue.on()
+            print("aguardando o cartao..")
+            id = self.read_card.read()
+            control = 0
+            for key in self.db:
+                if id == self.db[key].decode():
+                    self.blue.off()
+                    self.red.off()
+                    self.green.on()
+                    time.sleep(0.5)
+                    self.green.off()
+                    print(id)
+                    if self.logTable.status_entrou(id) == 0:
+                        self.entrou = 1
+                        if self.time_now > self.timeRG_max:
+                            self.present = 0
+                        elif self.time_now <= self.timeRG_max and self.time_now > self.timeRG:
+                            self.present = 2
+                        else:
+                            self.present = 1
+                    elif self.logTable.status_entrou(id) == 1:
+                        self.entrou = 0
+                        self.present = None
+                    self.logTable.new_log(id,self.entrou,self.date_now,self.time_now,self.present)
+                    self.logTable.list()
+                    control=1
+                    break
+
+            if control == 0:
+                print("Cartao nao cadastrado")
+                self.green.off()
+                self.blue.off()
+                self.red.on()
+                time.sleep(0.5)
+                self.red.off()
