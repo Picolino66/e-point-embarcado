@@ -24,17 +24,7 @@ class Station():
 		self.sta_if.active(False)
 		print("Wifi STA desligado")
 
-	def request_log(self,url,json):
-		"""Funcao responsavel por fazer o request post para o servidor.\n
-		Parametros:\n
-		-'url' (url que recebera o request)\n
-		-'json' (json com o conteudo que sera enviado para o servidor)
-		"""
-		resp = requests.post(url, json=json, headers={'Content-Type':'application/json;',})
-		await uasyncio.sleep(1)
-		if resp.status_code >= 200 and resp.status_code < 300:
-			print('json enviado para o server')
-		await uasyncio.sleep(1)
+
 
 class Access_Point():
 	"""Classe que controla o modo Access Point do Wifi do ESP32"""

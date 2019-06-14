@@ -55,7 +55,7 @@ class Log(Banco):
     def __init__(self):
         super(Log,self).__init__('log_table')
 
-    def new_log(self, id, entrou = 0,dateTime = [], presente=0, enviado=0):
+    def new_log(self, id, entrou = 0,dateTime = [], presente=0, enviado=0, matricula=0):
         """Funcao que adiciona um novo membro na tabela 'log_table'.\n
             Parametros:\n\n
             -'id' (id do cartao);
@@ -63,13 +63,15 @@ class Log(Banco):
             -'dateTime' (data e hora em que o cartao foi batido)
             -'presente' (se o membro esta ausente(0), no horario(1) ou atrasado(2))
             -'enviado' (registro enviado para servidor(1), nao enviado ainda(0))
+            -'matricula' (matricula do membro)
         """
         json = {
             "id":id,
             "dateTime": dateTime,
             "entrou":entrou, 
             "presente": presente,
-            "enviado": enviado
+            "enviado": enviado,
+            "matricula": matricula
             }
         self.add_json(json)
         return json

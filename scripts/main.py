@@ -3,6 +3,7 @@ from connectWifi import Access_Point, Station
 from bancoDados import Log, Cadastro
 from machine import Pin, PWM, I2C
 from rfid import Mfrc522
+import urequests
 import web_server
 import uasyncio
 import machine
@@ -124,7 +125,7 @@ class Main():
                     self.sta.connect()
                     await uasyncio.sleep(2)
             print("Conectado com sucesso")
-            #self._send_to_server.set()
+            self._send_to_server.set()
             print(self.sta)
 
     async def server(self):
@@ -133,7 +134,7 @@ class Main():
             await self._server
             print('Iniciou server')
             await uasyncio.sleep_ms(200)
-            web_server.host_server(event=self._server,callback=self._cad, off=self._server_off)
+            web_server.host_server(event=self._server,callback=self._cad)
             print('Parou server')
             await uasyncio.sleep_ms(100)
 
@@ -150,7 +151,8 @@ class Main():
                         key = str(key).encode()
                         json = ujson.loads(db_l[key])
                         if json["enviado"] == 0:
-                            self.sta.request_log(url,json)
+                            #self.sta.request_log(url,json)
+                            urequests.post(url, json=json, headers={'Content-Type':'application/json;',})
                             json["enviado"] = 1
                             db_l[key] = ujson.dumps(json)
                             db_l.flush()
@@ -161,6 +163,7 @@ class Main():
                             db_l.flush()
                         print("Lista Limpa!!")
                         self._send_to_server.clear()
+                        break
             except IndexError:
                 print("sem net")
             
@@ -200,6 +203,7 @@ class Main():
                 id = self.rfid.read()
                 if id:
                     for key in db_m:
+                        matricula = key.decode()
                         if id == db_m[key].decode():
                             PWM(self.red).duty(0)
                             PWM(self.green).duty(1023)
@@ -222,7 +226,7 @@ class Main():
                             else:
                                 entrou = 0
                                 present = None
-                            self.log.new_log(id,entrou,dateTime_now,present)
+                            self.log.new_log(id,entrou,dateTime_now,present,matricula=matricula)
                             self.log.list()
                             cadastrado = 1
                             break
