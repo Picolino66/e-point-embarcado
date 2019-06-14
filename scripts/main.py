@@ -1,78 +1,78 @@
 #Esse arquivo é executado automaticamente logo em seguida do boot.py
-from machine import Pin, PWM
-import network
-import machine 
-import connectWifi
 from connectWifi import Access_Point, Station
-import web_server
-import connectWifi
-#from rtc import Rtc
-import btree
-import time
-from rfid import Mfrc522
-from rfid_cad import Mfrc522_cad
 from bancoDados import Log, Cadastro
-import bancoAut
-import sendLog
-import asyn
+from machine import Pin, PWM, I2C
+from rfid import Mfrc522
+import web_server
 import uasyncio
-import sendLog
+import machine
+import btree
 import ujson
+import time
+import asyn
+import DS3231
 
-BOT_PIN = 12
-
-class Main():
+#Classe principal que controla todas as funcoes do projeto
+class Main():  
     def __init__(self):
+        #Pinos led
         self.blue = Pin(17,Pin.OUT)
         self.red = Pin(16,Pin.OUT)
-        self.green = Pin(4,Pin.OUT) 
+        self.green = Pin(4,Pin.OUT)
+        #Pino botao 
+        self.BOT_PIN = 12
+        #Pinos RTC
+        self.SDA_PIN = 21
+        self.SCL_PIN = 22
+        
+        #Definicao do horario da Reuniao Geral
+        self.horaRG = 19
+        self.minRG = 10
+        self.minRG_max = 20
 
-        self.horaRG = [19]
-        self.minRG = [10]
-        self.minRG_max = [20]
-
-        self.f_m, self.db_m = self.open_member_table()
-        self.f_l, self.db_l = self.open_log_table()
-
+        #Funcoes Wifi
         self.ap = Access_Point()
         self.sta = Station()
 
+        #Funcoes das tabelas do Banco de Dados
         self.log = Log()
         self.cadastro = Cadastro()
 
-        self.rfid_cad = Mfrc522_cad()
+        #Funcoes do RFID
         self.rfid = Mfrc522()
-        #self.rtc = Rtc()
 
-        self.altern = Pin(BOT_PIN, Pin.IN, Pin.PULL_UP)
+        #Botao alternador do modo de autenticacao para o modo webserver para cadastro
+        self.altern = Pin(self.BOT_PIN, Pin.IN, Pin.PULL_UP)
         self.altern.irq(trigger=Pin.IRQ_FALLING, handler=self.altern_mode)
 
-        #Eventos
+        #RTC
+        self.i2c = I2C(sda = Pin(self.SDA_PIN), scl = Pin(self.SCL_PIN))
+        self.rtc = DS3231.DS3231(self.i2c)
+
+        #Criacoes dos eventos do asyn.py
         self._send_to_server = asyn.Event()
         self._server = asyn.Event() 
         self._aut = asyn.Event()
-        self._ap = asyn.Event()
         self._sta = asyn.Event()
-        self._server_off = asyn.Event()
         self._cad = asyn.Event()
+        self._ap = asyn.Event()
 
+        #Inicializacao dos eventos que iniciam o modo autenticacao e o modo Sta do wifi
         self._aut.set()
         self._sta.set()
         
-        #self._ap.set()
-
-        # Corrotinas
+        #Corrotinas
         self.loop = uasyncio.get_event_loop()
+        self.loop.create_task(self.send_to_server())
         self.loop.create_task(self.sta_connect())
         self.loop.create_task(self.ap_connect())
-        self.loop.create_task(self.server())
         self.loop.create_task(self.autenticar())
         self.loop.create_task(self.cadastrar())
-        self.loop.create_task(self.server_off())
-        self.loop.create_task(self.send_to_server())
+        self.loop.create_task(self.server())
         self.loop.run_forever()
 
     def open_member_table(self):
+        """Funcao para abrir a tabela de cadastro dos membros"""
         try:
             f = open("member_table", "r+b")
             db = btree.open(f, pagesize=512)
@@ -81,6 +81,7 @@ class Main():
         return f,db
 
     def open_log_table(self):
+        """Funcao para abrir a tabela Log"""
         try:
             f = open("log_table", "r+b")
             db = btree.open(f, pagesize=512)
@@ -89,6 +90,7 @@ class Main():
         return f,db
 
     def altern_mode(self, toggler):
+        """Funcao que alterna para o modo de cadastro"""
         if self._sta.is_set():
             self._aut.clear()
             self.sta.disconnect()
@@ -96,6 +98,7 @@ class Main():
             self._ap.set()
 
     async def ap_connect(self):
+        """Corrotina que conecta o modo STA do ESP32"""
         while True:
             await self._ap
             PWM(self.blue).duty(0)
@@ -108,13 +111,12 @@ class Main():
                 await uasyncio.sleep(1)
             self.ap.disconnect()
             self._ap.clear()
-            #self._sta.set()
-            #self._aut.set()
             
     async def sta_connect(self):
-        """ Corrotina para controle de conexões wireless no modo STA """
+        """Corrotina que conecta o modo STA do ESP32"""
         while True:
             await self._sta
+            print("ligando wifi")
             while self.sta.is_connected():
                 await uasyncio.sleep(1)
             if not self._ap.is_set():
@@ -126,6 +128,7 @@ class Main():
             print(self.sta)
 
     async def server(self):
+        """Corrotina que inicia o servidor"""
         while True:
             await self._server
             print('Iniciou server')
@@ -134,18 +137,8 @@ class Main():
             print('Parou server')
             await uasyncio.sleep_ms(100)
 
-    async def server_off(self):
-        await self._server_off
-        #machine.reset()
-        self.ap.disconnect()
-        self._ap.clear()
-        self._server.clear()
-        self._cad.clear()
-        print("server desligado")
-        self._sta.set()
-        self._aut.set()
-
     async def send_to_server(self):
+        """Corrotina que envia os dados da tabela Log para o servidor"""
         url = 'http://192.168.0.9:8000/create/'
         f_l, db_l = self.open_log_table()
         while True:
@@ -171,12 +164,12 @@ class Main():
             except IndexError:
                 print("sem net")
             
-
     async def cadastrar(self):
+        """Corrotina que cadastra na tabela dos membros"""
         await self._cad
         print("entrei no _cad")
         matricula = self._cad.value()            
-        id = self.rfid_cad.read()
+        id = self.rfid.read_cad()
         print(id,"---", matricula)
         self.cadastro.new_member(id, matricula)
         await uasyncio.sleep_ms(100)
@@ -184,33 +177,35 @@ class Main():
         await uasyncio.sleep(1)
         PWM(self.red).duty(1023)
         self._cad.clear()
+    
+    def get_time(self):
+        """Funcao que converte o dateTime"""
+        year, month, day, _, hour, minute, second = [str(i) for i in self.rtc.DateTime()]
+        return "".join([year,'-',month, '-', day, ' ', hour, ':', minute, ':',second ])
 
-    async def autenticar(self):       
+    async def autenticar(self):
+        """Corrotina que autentica a batida do cartao e salva na tabela Log"""
         while True:
             await self._aut
             await uasyncio.sleep(1)
             f_m, db_m = self.open_member_table()             
             while self._aut.is_set():
-                ano_now = [2019]    #rtc.ds.Year()
-                mes_now = [6]       #rtc.ds.Month()
-                dia_now = [11]      #rtc.ds.Day()
-                hora_now = [19]     #rtc.ds.Hour()
-                minuto_now = [0]    #rtc.ds.Minute()
-                dateTime_now = [2019,6,12,4,12,43,0]
-                self.red.on()
-                self.green.off()
-                self.blue.on()
+                hora_now = self.rtc.Hour()
+                minuto_now = self.rtc.Minute()
+                dateTime_now = self.get_time()
+                PWM(self.red).duty(1023)
+                PWM(self.green).duty(0)
+                PWM(self.blue).duty(1023)
                 cadastrado = 0
-                #print("aguardando cartao ")
                 id = self.rfid.read()
                 if id:
                     for key in db_m:
                         if id == db_m[key].decode():
-                            self.red.off()
-                            self.green.on()
-                            self.blue.off()
+                            PWM(self.red).duty(0)
+                            PWM(self.green).duty(1023)
+                            PWM(self.blue).duty(0)
                             time.sleep(0.5)
-                            self.green.off()
+                            PWM(self.green).duty(0)
                             if not self.log.status_entrou(id):
                                 entrou = 1
                                 if hora_now > self.horaRG:
@@ -233,11 +228,10 @@ class Main():
                             break
                     if not cadastrado:
                         print("Cartao nao cadastrado")
-                        self.red.on()
-                        self.green.off()
-                        self.blue.off()
+                        PWM(self.red).duty(1023)
+                        PWM(self.green).duty(0)
+                        PWM(self.blue).duty(0)
                         time.sleep(0.5)
-                        self.red.off()
+                        PWM(self.red).duty(0)
                 await uasyncio.sleep_ms(100)
-                #print("Aguardando Cartao")
 main = Main()

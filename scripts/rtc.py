@@ -11,5 +11,4 @@ class Rtc():
     def get_rtc(self):
         i2c = I2C(sda = Pin(self.sda_pin), scl = Pin(self.scl_pin))
         ds = DS3231.DS3231(i2c)
-
-        
+        return ds

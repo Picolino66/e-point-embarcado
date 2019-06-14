@@ -12,15 +12,26 @@ class Mfrc522():
     def __init__(self):
         self.rdr = mfrc522.MFRC522(RF_SCK, RF_MOSI, RF_MISO, RF_RST, RF_SDA)
         
-    #Funçao responsavel pela leitura do cartao   
+    #Funçao responsavel pela leitura do cartao para autenticacao 
     def read(self):
         (stat, tag_type) = self.rdr.request(self.rdr.REQIDL)
         if stat == self.rdr.OK:
             (stat, raw_uid) = self.rdr.anticoll()
             try:
                 read = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3]) 
-                print(read)
             except IndexError:
                 return False
-            return read
+            return read #retorna o id do cartao
+
+    #Funçao responsavel pela leitura do cartao para cadastro
+    def read_cad(self):
+        while True:
+            (stat, tag_type) = self.rdr.request(self.rdr.REQIDL)
+            if stat == self.rdr.OK:
+                (stat, raw_uid) = self.rdr.anticoll()
+                try:
+                    read_cad = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3]) 
+                except IndexError:
+                    return False
+                return read_cad
         
