@@ -41,7 +41,6 @@ class Access_Point():
 		self.ap_if.config(essid='EPOINT_AP')
 		self.ap_if.config(authmode=0)
 
-	
 		if self.ap_if.isconnected():
 			print("AP ja esta conectado")
 			return
