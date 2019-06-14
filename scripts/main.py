@@ -11,6 +11,7 @@ import ujson
 import time
 import asyn
 import DS3231
+import urequests
 
 #Classe principal que controla todas as funcoes do projeto
 class Main():  
@@ -114,18 +115,19 @@ class Main():
             
     async def sta_connect(self):
         """Corrotina que conecta o modo STA do ESP32"""
-        while True:
-            await self._sta
-            print("ligando wifi")
-            while self.sta.is_connected():
-                await uasyncio.sleep(1)
-            if not self._ap.is_set():
-                while not self.sta.is_connected():
-                    self.sta.connect()
-                    await uasyncio.sleep(2)
-            print("Conectado com sucesso")
-            #self._send_to_server.set()
-            print(self.sta)
+        #while True:
+        await self._sta
+        print("ligando wifi")
+        while self.sta.is_connected():
+            await uasyncio.sleep(1)
+        if not self._ap.is_set():
+            while not self.sta.is_connected():
+                self.sta.connect()
+                await uasyncio.sleep(2)
+        print("Conectado com sucesso")
+        self._send_to_server.set()
+        print(self.sta)
+        await uasyncio.sleep(1)
 
     async def server(self):
         """Corrotina que inicia o servidor"""
@@ -133,7 +135,7 @@ class Main():
             await self._server
             print('Iniciou server')
             await uasyncio.sleep_ms(200)
-            web_server.host_server(event=self._server,callback=self._cad, off=self._server_off)
+            web_server.host_server(event=self._server,callback=self._cad)
             print('Parou server')
             await uasyncio.sleep_ms(100)
 
@@ -150,10 +152,12 @@ class Main():
                         key = str(key).encode()
                         json = ujson.loads(db_l[key])
                         if json["enviado"] == 0:
-                            self.sta.request_log(url,json)
+                            #self.sta.request_log(url,json)
+                            urequests.post(url, json=json, headers={'Content-Type':'application/json;',})
                             json["enviado"] = 1
                             db_l[key] = ujson.dumps(json)
                             db_l.flush()
+                            print(key,"enviadoo")
                     except KeyError:
                         print("Final do arquivo, limpando...")
                         for log in db_l:
@@ -161,6 +165,7 @@ class Main():
                             db_l.flush()
                         print("Lista Limpa!!")
                         self._send_to_server.clear()
+                        break
             except IndexError:
                 print("sem net")
             

@@ -32,13 +32,6 @@ class Station():
 		self.sta_if.active(False)
 		print("Wifi STA desligado")
 
-	def request_log(self,url,json):
-		resp = requests.post(url, json=json, headers={'Content-Type':'application/json;',})
-		await uasyncio.sleep(1)
-		if resp.status_code >= 200 and resp.status_code < 300:
-			print('json enviado para o server')
-		await uasyncio.sleep(1)
-
 class Access_Point():
 	def __init__(self):
 		self.ap_if = network.WLAN(network.AP_IF)

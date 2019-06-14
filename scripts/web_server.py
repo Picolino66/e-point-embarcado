@@ -28,6 +28,7 @@ def host_server(event=None, callback=None):
             yield from app.render_template(resp, "aproxime_cartao.tpl", (req,))
             nonlocal matricula
             matricula = req.form["matricula"]
+            callback.clear()
             callback.set(matricula) #Seta o _cad passando a matricula
         else:
             yield from app.render_template(resp, "404.tpl", (req,))

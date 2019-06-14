@@ -1,0 +1,4 @@
+scripts/.vscode
+scripts/libs
+scripts/__pycache__
+scripts/lib
