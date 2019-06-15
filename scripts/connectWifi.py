@@ -25,8 +25,10 @@ class Station():
 	def connect(self):
 		self.sta_if.active(True)
 		#self.sta_if.connect('LABSINE', 'Redeneuralartificial(@$%)Labsine2018')
-		self.sta_if.connect('Zaza', 'zazafullstack')
+		#self.sta_if.connect('Zaza', 'zazafullstack')
+		self.sta_if.connect('Ju me passa a senha', 'socorro1')
 		#self.sta_if.connect('MELO', 'melo1212')
+
 
 	def disconnect(self):
 		self.sta_if.active(False)

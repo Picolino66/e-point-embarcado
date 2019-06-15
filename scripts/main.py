@@ -3,6 +3,7 @@ from connectWifi import Access_Point, Station
 from bancoDados import Log, Cadastro
 from machine import Pin, PWM, I2C
 from rfid import Mfrc522
+import urequests
 import web_server
 import uasyncio
 import machine
@@ -11,7 +12,6 @@ import ujson
 import time
 import asyn
 import DS3231
-import urequests
 
 #Classe principal que controla todas as funcoes do projeto
 class Main():  
@@ -115,19 +115,18 @@ class Main():
             
     async def sta_connect(self):
         """Corrotina que conecta o modo STA do ESP32"""
-        #while True:
-        await self._sta
-        print("ligando wifi")
-        while self.sta.is_connected():
-            await uasyncio.sleep(1)
-        if not self._ap.is_set():
-            while not self.sta.is_connected():
-                self.sta.connect()
-                await uasyncio.sleep(2)
-        print("Conectado com sucesso")
-        self._send_to_server.set()
-        print(self.sta)
-        await uasyncio.sleep(1)
+        while True:
+            await self._sta
+            print("ligando wifi")
+            while self.sta.is_connected():
+                await uasyncio.sleep(1)
+            if not self._ap.is_set():
+                while not self.sta.is_connected():
+                    self.sta.connect()
+                    await uasyncio.sleep(2)
+            print("Conectado com sucesso")
+            self._send_to_server.set()
+            print(self.sta)
 
     async def server(self):
         """Corrotina que inicia o servidor"""
@@ -141,7 +140,7 @@ class Main():
 
     async def send_to_server(self):
         """Corrotina que envia os dados da tabela Log para o servidor"""
-        url = 'http://192.168.0.9:8000/create/'
+        url = 'http://192.168.43.121:8000/create/'
         f_l, db_l = self.open_log_table()
         while True:
             await self._send_to_server
@@ -154,10 +153,10 @@ class Main():
                         if json["enviado"] == 0:
                             #self.sta.request_log(url,json)
                             urequests.post(url, json=json, headers={'Content-Type':'application/json;',})
+                            print(key, "enviado")
                             json["enviado"] = 1
                             db_l[key] = ujson.dumps(json)
                             db_l.flush()
-                            print(key,"enviadoo")
                     except KeyError:
                         print("Final do arquivo, limpando...")
                         for log in db_l:
@@ -205,6 +204,7 @@ class Main():
                 id = self.rfid.read()
                 if id:
                     for key in db_m:
+                        matricula = key.decode()
                         if id == db_m[key].decode():
                             PWM(self.red).duty(0)
                             PWM(self.green).duty(1023)
@@ -227,7 +227,7 @@ class Main():
                             else:
                                 entrou = 0
                                 present = None
-                            self.log.new_log(id,entrou,dateTime_now,present)
+                            self.log.new_log(id,entrou,dateTime_now,present,matricula=matricula)
                             self.log.list()
                             cadastrado = 1
                             break
