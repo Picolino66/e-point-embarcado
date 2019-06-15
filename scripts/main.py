@@ -140,7 +140,7 @@ class Main():
 
     async def send_to_server(self):
         """Corrotina que envia os dados da tabela Log para o servidor"""
-        url = 'http://192.168.0.9:8000/create/'
+        url = 'http://192.168.43.121:8000/create/'
         f_l, db_l = self.open_log_table()
         while True:
             await self._send_to_server
@@ -153,6 +153,7 @@ class Main():
                         if json["enviado"] == 0:
                             #self.sta.request_log(url,json)
                             urequests.post(url, json=json, headers={'Content-Type':'application/json;',})
+                            print(key, "enviado")
                             json["enviado"] = 1
                             db_l[key] = ujson.dumps(json)
                             db_l.flush()

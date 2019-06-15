@@ -24,8 +24,6 @@ class Station():
 		self.sta_if.active(False)
 		print("Wifi STA desligado")
 
-
-
 class Access_Point():
 	"""Classe que controla o modo Access Point do Wifi do ESP32"""
 	def __init__(self):
